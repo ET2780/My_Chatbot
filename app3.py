@@ -42,9 +42,9 @@ def get_bot_response():
     elif states[current_state] == "issue":
         user_context['issue'] = userText
         next_state()
-        return "what "
+        return "Please describe the situation you are facing, who is involved and what are their relevant charecteristics, describe as much as possible the relationship between you and them"
     elif states[current_state] == "topic":
-        user_context["topic"] = userText
+        user_context['topic'] = userText
         next_state()
     elif states[current_state] == "simulation":
         response = openai.ChatCompletion.create(
@@ -95,6 +95,33 @@ def revised_issue_description(original_issue: str) -> str:
     acting_directions = response['choices'][0]['message']['content']
     return acting_directions
 
+def revised_topic(original_topic: str) -> str:
+    """
+    Uses the OpenAI chat completion API
+    with a special prompt that takes
+    the original topic, looks for relevant content and examples 
+    and re-calibrates the simulation"
+
+    Return:
+        the acting directions
+    """
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are an AI trained in the principles of the book 'Crucial Conversations'. The user will provide the area in their life in which they need to have a crucial conversation on: '" + original_topic + "'. As the AI, you will revise this topic into acting directions and expected behaviors for an actor tasked with playing the character the user wants to simulate a conversation with."
+            },
+            {
+                "role": "user",
+                "content": original_topic
+            }
+        ],
+        max_tokens=1024,
+        temperature=0.7,
+    )
+    acting_directions = response['choices'][0]['message']['content']
+    return acting_directions
 
 if __name__ == "__main__":
     app.run()
