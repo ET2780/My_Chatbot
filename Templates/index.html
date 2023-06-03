@@ -61,4 +61,24 @@
             });
         });
     </script>
+    <script>
+        $("#submit").click(function(){
+            submitMessage();
+        });
+    
+        $("#userInput").keypress(function(e){
+            if(e.which == 13){  // Check if the key pressed is the Enter key (key code 13)
+                submitMessage();
+            }
+        });
+    
+        function submitMessage(){
+            var userInput = $("#userInput").val();
+            $.get("/get?msg=" + userInput, function(data){
+                $("#chat").append("<li class='list-group-item'><b>You:</b> " + userInput + "</li>");
+                $("#chat").append("<li class='list-group-item'><b>OpenAI:</b> " + data + "</li>");
+                $("#userInput").val('');  // Clear the input field
+            });
+        }
+    </script>
 </body>
