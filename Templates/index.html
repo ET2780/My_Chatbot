@@ -1,54 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OpenAI GPT Chat</title>
+    <title>Crucial Conversations Simulator</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <style>
         body {
             background-color: #35372D;
             color: #ededf2;
+            margin: 0;
+            padding: 0;
         }
-        .container {
+        .welcome-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .welcome-page .logo {
+            margin-bottom: 20px;
+        }
+        .welcome-page .headline {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .welcome-page .sub-headline {
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .welcome-page .start-button {
+            background-color: #21232E;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            text-decoration: none;
+        }
+        .bot-page {
+            display: none;
             margin-top: 20px;
         }
-        #chat {
+        .bot-page #chat {
             height: 400px;
             overflow-y: scroll;
             background-color: #444654;
         }
-        .list-group-item {
+        .bot-page .list-group-item {
             border-radius: 5px;
             background-color: #444654;
         }
-        .submit {
+        .bot-page .submit {
             background-color:#21232e;
             color: white;
             border-radius: 5px;
         }
-        .input-group input {
+        .bot-page .input-group input {
             background-color: #444654;
             color: #ededf2;
             border: none;
         }
-        
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>OpenAI GPT Chat</h2>
-        <hr>
-        <div class="panel panel-default">
-            <div class="panel-heading">Chat Messages</div>
-            <div class="panel-body" id="chat">
-                <ul class="list-group">
-                </ul>
-            </div>
+    <div class="welcome-page">
+        <div class="logo">
+            <!-- Place your logo here -->
+            <img src="path/to/your/logo.png" alt="Logo">
         </div>
-        <div class="input-group">
-            <input type="text" id="userInput" class="form-control">
-            <span class="input-group-btn">
-                <button class="btn btn-default" id="submit">Submit</button>
-            </span>
+        <h2 class="headline">Welcome to the Crucial Conversations Simulator</h2>
+        <h3 class="sub-headline">Simulate any important conversation you might have in the near future</h3>
+        <a href="#" class="start-button" onclick="showBotPage()">Start</a>
+    </div>
+
+    <div class="bot-page" id="botPage">
+        <div class="container">
+            <h2>Crucial Conversations Simulator</h2>
+            <h3>Welcome to the simulator, here you simulate any important conversation you might have in the near future</h3>
+    
+            <hr>
+            <div class="panel panel-default">
+                <div class="panel-heading">Chat Messages</div>
+                <div class="panel-body" id="chat">
+                    <ul class="list-group">
+                    </ul>
+                </div>
+            </div>
+            <div class="input-group">
+                <input type="text" id="userInput" class="form-control">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" id="submit">Submit</button>
+                </span>
+            </div>
         </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -60,8 +104,7 @@
                 $("#chat").append("<li class='list-group-item'><b>OpenAI:</b> " + data + "</li>");
             });
         });
-    </script>
-    <script>
+    
         $("#submit").click(function(){
             submitMessage();
         });
@@ -80,5 +123,11 @@
                 $("#userInput").val('');  // Clear the input field
             });
         }
+    
+        function showBotPage() {
+            $(".welcome-page").hide();
+            $(".bot-page").show();
+        }
     </script>
 </body>
+</html>
