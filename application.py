@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from openai.error import RateLimitError
 
-application = Flask(__name__)
+application = Flask(__name__, template_folder='Templates/')
 openai.api_key = getenv('OPENAI_API_KEY')
 
 # A dictionary to store user context
