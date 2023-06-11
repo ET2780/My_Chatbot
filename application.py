@@ -69,10 +69,7 @@ def get_bot_response():
             next_state()  # Move to the next state
             return suggestions
         else:
-            # Check alignment with rules and store suggestions
-            alignment_check = check_alignment_with_rules(userText)
-            if not alignment_check['aligns_with_rules'] and alignment_check['suggestion']:
-                user_context['suggestions'].append(alignment_check['suggestion'])
+          
             # Continue the simulation
             # Add the user's input to the conversation history
             user_context['conversation_history'].append({
@@ -86,6 +83,11 @@ def get_bot_response():
             acting_directions_goal = user_context['goal']
             acting_directions = f"{acting_directions_issue}\n{acting_directions_target}\n{acting_directions_situation}\n{acting_directions_goal}"
 
+            # Check alignment with rules and store suggestions
+            alignment_check = check_alignment_with_rules(userText)
+            if not alignment_check['aligns_with_rules'] and alignment_check['suggestion']:
+                user_context['suggestions'].append(alignment_check['suggestion'])
+            
             # Create the messages array for the API call
             messages = [
                 {
