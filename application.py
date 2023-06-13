@@ -61,66 +61,62 @@ def get_bot_response():
     elif states[current_state] == "goal":
         user_context['goal'] = userText
         next_state()
-        return "Thank you for providing all the details. Now, let's start the simulation. Please start the conversation as you would in real life. In order to end the conversation, type: 'Finish simulation'"
+
+        # Start the simulation immediately after the goal state
+        acting_directions = f"{user_context['user_traits']}\n{user_context['target_traits']}\n{user_context['situation']}\n{user_context['goal']}"
+        assistant_message = start_simulation(acting_directions)
+        return assistant_message
+    
     elif states[current_state] == "simulation":
-        if userText.lower() == "finish simulation":
-            acting_directions = f"{user_context['user_traits']}\n{user_context['target_traits']}\n{user_context['situation']}\n{user_context['goal']}"
-            suggestions = generate_suggestions(user_context['conversation_history'], acting_directions, user_context['suggestions'])
-            next_state()  # Move to the next state
-            return suggestions
-        else:
-          
-            # Continue the simulation
-            # Add the user's input to the conversation history
-            user_context['conversation_history'].append({
-                "role": "user",
-                "content": userText
-            })
+       
+        # Continue the simulation
+        # Add the user's input to the conversation history
+        user_context['conversation_history'].append({
+            "role": "user",
+            "content": userText
+        })
 
-            acting_directions_issue = user_context['user_traits']
-            acting_directions_target = user_context['target_traits']
-            acting_directions_situation = user_context['situation']
-            acting_directions_goal = user_context['goal']
-            acting_directions = f"{acting_directions_issue}\n{acting_directions_target}\n{acting_directions_situation}\n{acting_directions_goal}"
+        acting_directions_issue = user_context['user_traits']
+        acting_directions_target = user_context['target_traits']
+        acting_directions_situation = user_context['situation']
+        acting_directions_goal = user_context['goal']
+        acting_directions = f"{acting_directions_issue}\n{acting_directions_target}\n{acting_directions_situation}\n{acting_directions_goal}"
 
-            # Check alignment with rules and store suggestions
-            alignment_check = check_alignment_with_rules(userText)
-            if not alignment_check['aligns_with_rules'] and alignment_check['suggestion']:
-                user_context['suggestions'].append(alignment_check['suggestion'])
-            
-            # Create the messages array for the API call
-            messages = [
-                {
-                    "role": "system",
-                    "content": f"You are an AI assistant. You are playing the role of {user_context['conversation_with']}. Acting directions: {acting_directions}"
-                },
-                {
-                    "role": "assistant",
-                    "content": "Start the conversation."
-                }
-            ] + [{"role": message["role"], "content": message["content"]} for message in user_context['conversation_history']]
+        # Check alignment with rules and store suggestions
+        alignment_check = check_alignment_with_rules(userText)
+        if not alignment_check['aligns_with_rules'] and alignment_check['suggestion']:
+            user_context['suggestions'].append(alignment_check['suggestion'])
 
+        # Create the messages array for the API call
+        messages = [
+            {
+                "role": "system",
+                "content": f"You are an AI assistant. You are playing the role of {user_context['conversation_with']}. Acting directions: {acting_directions}"
+            }
+        ] + [{"role": message["role"], "content": message["content"]} for message in user_context['conversation_history']]
 
-            try:
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages,
-                    max_tokens=1024,
-                    temperature=0.7,
-                )
-            except RateLimitError:
-                return "I'm sorry, but I'm currently overloaded with requests. Please try again later or reload the bot."
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                max_tokens=1024,
+                temperature=0.7,
+            )
+        except RateLimitError:
+            return "I'm sorry, but I'm currently overloaded with requests. Please try again later or reload the bot."
 
-            # Extract the assistant's message from the response
-            assistant_message = response['choices'][0]['message']['content']
+        # Extract the assistant's message from the response
+        assistant_message = response['choices'][0]['message']['content']
 
-            # Add the assistant's message to the conversation history
-            user_context['conversation_history'].append({
-                "role": "assistant",
-                "content": assistant_message
-            })
+        # Add the assistant's message to the conversation history
+        user_context['conversation_history'].append({
+            "role": "assistant",
+            "content": assistant_message
+        })
 
-            return str(assistant_message)
+        return str(assistant_message)
+    
+    next_state()  # Move to the "Results" state
 
 def generate_suggestions(conversation_history, acting_directions, suggestions):
     """
@@ -281,18 +277,58 @@ def get_assistant_response(user_input, acting_directions_issue, acting_direction
         return "I understand that your goal is to communicate clearly and avoid any negative outcomes. I appreciate your commitment to improvement, and I'm here to help you overcome any challenges. Let's work together to find a resolution."
     else:
         # Use OpenAI's ChatGPT for assistant's responses
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=f"User: {user_input}\nAssistant:",
-            temperature=0.6,
-            max_tokens=50,
-            n=1,
-            stop=None,
-            log_level="info",
-            logprobs=0
-        )
-        return response['choices'][0]['text']
+        messages = [
+            {"role": "user", "content": user_input},
+            {"role": "assistant", "content": "Assistant:"}
+        ]
 
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                max_tokens=150,
+                temperature=0.8,
+                n=1,
+                stop=None,
+                log_level="info",
+                logprobs=0
+            )
+        except RateLimitError:
+            return "I'm sorry, but I'm currently overloaded with requests. Please try again later or reload the bot."
+
+        return response['choices'][0]['message']['content']
+
+def start_simulation(acting_directions):
+    # Create the system message
+    system_message = {
+        "role": "system",
+        "content": f"You are a highly trained actor. You are playing the role of {user_context['conversation_with']}. Your objective is not to solve problems or give advice, but to embody the following traits and behaviors: {acting_directions} while taking into consideration the situation the user described. Interact with the user in a way that reflects these traits and behaviors. Remember, you are not providing personal advice or solutions. Be {user_context['target_traits']}."
+    }
+
+    # Create the messages array for the API call
+    messages = [system_message]
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            max_tokens=1024,
+            temperature=0.8,
+        )
+    except RateLimitError:
+        return "I'm sorry, but I'm currently overloaded with requests. Please try again later or reload the bot."
+
+    # Extract the assistant's message from the response
+    assistant_message = response['choices'][0]['message']['content']
+
+    # Add the system and assistant's message to the conversation history
+    user_context['conversation_history'].append(system_message)
+    user_context['conversation_history'].append({
+        "role": "assistant",
+        "content": assistant_message
+    })
+
+    return assistant_message
 
 if __name__ == "__main__":
-    application.run()
+    application.run(port=8000)

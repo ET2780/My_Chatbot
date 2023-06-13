@@ -62,6 +62,19 @@
             color: #ededf2;
             border: none;
         }
+        .finish-simulation-button {
+            background-color: #21232E;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            text-decoration: none;
+            margin-top: 20px;
+            display: block;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
@@ -88,14 +101,19 @@
                     </ul>
                 </div>
             </div>
+            <div class="My apologies for the cutoff again. Here is the remaining part of the code:
+
+```html
             <div class="input-group">
                 <input type="text" id="userInput" class="form-control">
                 <span class="input-group-btn">
                     <button class="btn btn-default" id="submit">Submit</button>
                 </span>
             </div>
+            <button class="finish-simulation-button" id="finish-simulation">Finish Simulation</button>
         </div>
     </div>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script>
         $("#submit").click(function(){
@@ -130,5 +148,20 @@
             $(".bot-page").show();
         }
     </script>
+    <script>
+        document.getElementById('finish-simulation').addEventListener('click', function() {
+            fetch('/finish_simulation')
+                .then(response => response.text())
+                .then(data => {
+                    // Create a new Blob with the returned data
+                    var blob = new Blob([data], {type: 'text/html'});
+    
+                    // Create a new URL object with the Blob
+                    var url = URL.createObjectURL(blob);
+    
+                    // Open the new URL in a new tab
+                    window.open(url, '_blank');
+                });
+        });
+    </script>
 </body>
-</html>
