@@ -45,15 +45,15 @@ def get_bot_response():
     elif states[current_state] == "conversation_with":
         user_context['conversation_with'] = userText
         next_state()
-        return "Describe your traits and how you usually interact with this person."
+        return "How do you usually behave around this person?"
     elif states[current_state] == "user_traits":
         user_context['user_traits'] = userText
         next_state()
-        return "Describe the traits of the person you wish to have a conversation with."
+        return "Describe the person you wish to have a conversation with, what is their behavior around you?"
     elif states[current_state] == "target_traits":
         user_context['target_traits'] = userText
         next_state()
-        return "What is the situation that led to this conversation?"
+        return "What is the situation that led to this conversation? The more information you provide, the better the simulation"
     elif states[current_state] == "situation":
         user_context['situation'] = userText
         next_state()
@@ -302,7 +302,7 @@ def start_simulation(acting_directions):
     # Create the system message
     system_message = {
         "role": "system",
-        "content": f"You are a highly trained actor. You are playing the role of {user_context['conversation_with']}. Your objective is not to solve problems or give advice, but to embody the following traits and behaviors: {acting_directions} while taking into consideration the situation the user described. Interact with the user in a way that reflects these traits and behaviors. Remember, you are not providing personal advice or solutions. Be {user_context['target_traits']}."
+        "content": f"You are a highly trained actor. You are playing the role of {user_context['conversation_with']}. Your objective is not to solve problems or give advice, but to embody the following traits and behaviors: {acting_directions} while taking into consideration the situation the user described. Interact with the user in a way that reflects these traits and behaviors. Remember, you are not providing personal advice or solutions. Act as a person with these {user_context['target_traits']} and do not end the conversation, only the user can."
     }
 
     # Create the messages array for the API call

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Suggestions</title>
+</head>
+<body>
+    <h1>Suggestions</h1>
+    {% if suggestions %}
+        <ul>
+            {% for suggestion in suggestions %}
+                <li>{{ suggestion }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No suggestions available.</p>
+    {% endif %}
+</body>
+</html>
