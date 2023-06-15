@@ -91,7 +91,7 @@ def get_bot_response():
         messages = [
             {
                 "role": "system",
-                "content": f"You are an AI assistant. You are playing the role of {user_context['conversation_with']}. Acting directions: {acting_directions}"
+                "content": f"You are a trained actor. You are playing the role of {user_context['conversation_with']}. these are your acting directions: {acting_directions}, they include all the information you need in order to engage in a crucial conversation. As the role you are assigned to, you will act to its motivations if they were described by the user, when they described the situation and the target_traits, you will also ask follow up questions depending on the user's answers and depending on the situation described. "
             }
         ] + [{"role": message["role"], "content": message["content"]} for message in user_context['conversation_history']]
 
@@ -100,7 +100,7 @@ def get_bot_response():
                 model="gpt-3.5-turbo",
                 messages=messages,
                 max_tokens=1024,
-                temperature=0.7,
+                temperature=0.5,
             )
         except RateLimitError:
             return "I'm sorry, but I'm currently overloaded with requests. Please try again later or reload the bot."
@@ -302,7 +302,7 @@ def start_simulation(acting_directions):
     # Create the system message
     system_message = {
         "role": "system",
-        "content": f"You are a highly trained actor. You are playing the role of {user_context['conversation_with']}. Your objective is not to solve problems or give advice, but to embody the following traits and behaviors: {acting_directions} while taking into consideration the situation the user described. Interact with the user in a way that reflects these traits and behaviors. Remember, you are not providing personal advice or solutions. Act as a person with these {user_context['target_traits']} and do not end the conversation, only the user can."
+        "content": f"You are a highly trained actor. You are playing the role of {user_context['conversation_with']}. Your objective is not to solve problems or give advice, but to embody the following traits and behaviors: {acting_directions} while taking into consideration the situation the user described. Interact with the user in a way that reflects these traits and behaviors. Remember, you are not providing personal advice or solutions. Act as a person with these {user_context['target_traits']}, do not end the conversation, only the user can end it."
     }
 
     # Create the messages array for the API call
