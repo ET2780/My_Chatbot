@@ -184,40 +184,40 @@ def generate_suggestions(conversation_history, acting_directions, suggestions):
     else:
         return suggestions_from_model + "\n\n" + acting_directions_feedback + "\n\n" + feedback + "\n\n" + goal_alignment_result
 
-def provide_feedback(conversation_history, acting_directions_issue, acting_directions_situation, acting_directions_goal):
-    """
-    Provides feedback based on the crucial conversation rules and the conversation history.
+# def provide_feedback(conversation_history, acting_directions_issue, acting_directions_situation, acting_directions_goal):
+#     """
+#     Provides feedback based on the crucial conversation rules and the conversation history.
 
-    Args:
-        conversation_history (list): List of conversation messages.
-        acting_directions_issue (str): Acting directions related to the issue.
-        acting_directions_situation (str): Acting directions related to the situation.
-        acting_directions_goal (str): Acting directions related to the goal.
+#     Args:
+#         conversation_history (list): List of conversation messages.
+#         acting_directions_issue (str): Acting directions related to the issue.
+#         acting_directions_situation (str): Acting directions related to the situation.
+#         acting_directions_goal (str): Acting directions related to the goal.
 
-    Returns:
-        str: Feedback based on crucial conversation rules.
-    """
-    # Extract user messages from the conversation history
-    user_messages = [message["content"] for message in conversation_history if message["role"] == "user"]
+#     Returns:
+#         str: Feedback based on crucial conversation rules.
+#     """
+#     # Extract user messages from the conversation history
+#     user_messages = [message["content"] for message in conversation_history if message["role"] == "user"]
 
-    # Example: Check if any user message doesn't align with crucial conversation rules
-    noncompliant_messages = []
+#     # Example: Check if any user message doesn't align with crucial conversation rules
+#     noncompliant_messages = []
 
-    for message in user_messages:
-        if not check_alignment_with_rules(message):
-            noncompliant_messages.append(message)
+#     for message in user_messages:
+#         if not check_alignment_with_rules(message):
+#             noncompliant_messages.append(message)
 
-    feedback = ""
+#     feedback = ""
 
-    if len(noncompliant_messages) > 0:
-        feedback += "Based on crucial conversation rules, the following messages could be improved:\n\n"
-        for message in noncompliant_messages:
-            feedback += f"- \"{message}\"\n"
+#     if len(noncompliant_messages) > 0:
+#         feedback += "Based on crucial conversation rules, the following messages could be improved:\n\n"
+#         for message in noncompliant_messages:
+#             feedback += f"- \"{message}\"\n"
 
-    # Additional feedback based on the acting directions and rules
-    # ...
+#     # Additional feedback based on the acting directions and rules
+#     # ...
 
-    return feedback
+#     return feedback
 
 
 def check_alignment_with_rules(message):
@@ -331,21 +331,15 @@ def start_simulation():
         "content": f"You are a highly trained actor. You are playing the role of {user_context['conversation_with']}. Your objective is not to solve problems or give advice, but to embody the following traits and behaviors: {acting_directions} while taking into consideration the situation the user described. Interact with the user in a way that reflects these traits and behaviors. Remember, you are not providing personal advice or solutions. Act as a person with these {user_context['target_traits']}, do not end the conversation, only the user can end it."
     }
 
-    # Add the system message to the conversation history
-    user_context['conversation_history'].append(system_message)
-
     # Create the messages array for the API call
-    messages = [
-        system_message,
-        {"role": "user", "content": user_context['conversation_history'][-1]['content']}  # Include the last user input
-    ]
+    messages = [system_message]
 
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
             max_tokens=1024,
-            temperature=0.7,
+            temperature=0.8,
         )
     except RateLimitError:
         return "I'm sorry, but I'm currently overloaded with requests. Please try again later or reload the bot."
@@ -353,7 +347,8 @@ def start_simulation():
     # Extract the assistant's message from the response
     assistant_message = response['choices'][0]['message']['content']
 
-    # Add the assistant's message to the conversation history
+    # Add the system and assistant's message to the conversation history
+    user_context['conversation_history'].append(system_message)
     user_context['conversation_history'].append({
         "role": "assistant",
         "content": assistant_message
