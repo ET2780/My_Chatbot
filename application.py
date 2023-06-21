@@ -73,18 +73,12 @@ def get_bot_response():
         user_context['conversation_history'].append({
             "role": "user",
             "content": userText
-     })
-
-        acting_directions_issue = user_context['user_traits']
-        acting_directions_target = user_context['target_traits']
-        acting_directions_situation = user_context['situation']
-        acting_directions_goal = user_context['goal']
-        acting_directions = f"{acting_directions_issue}\n{acting_directions_target}\n{acting_directions_situation}\n{acting_directions_goal}"
+        })
 
         # Check alignment with rules and store suggestions
         alignment_check = check_alignment_with_rules(userText)
         if not alignment_check['aligns_with_rules'] and alignment_check['suggestion']:
-         user_context['suggestions'].append(alignment_check['suggestion'])
+            user_context['suggestions'].append(alignment_check['suggestion'])
 
         # Create the messages array for the API call
         messages = [
@@ -94,21 +88,21 @@ def get_bot_response():
 
         try:
             response = openai.ChatCompletion.create(
-               model="gpt-3.5-turbo",
-              messages=messages,
-              max_tokens=100,
-             temperature=0.7,
-         )
+                model="gpt-3.5-turbo",
+                messages=messages,
+                max_tokens=100,
+                temperature=0.7,
+            )
         except RateLimitError:
             return "I'm sorry, but I'm currently overloaded with requests. Please try again later or reload the bot."
 
-     # Extract the assistant's message from the response
+        # Extract the assistant's message from the response
         assistant_message = response['choices'][0]['message']['content']
 
-     # Add the assistant's message to the conversation history
+        # Add the assistant's message to the conversation history
         user_context['conversation_history'].append({
-           "role": "assistant",
-           "content": assistant_message
+            "role": "assistant",
+            "content": assistant_message
         })
 
         return assistant_message
@@ -184,40 +178,28 @@ def generate_suggestions(conversation_history, acting_directions, suggestions):
     else:
         return suggestions_from_model + "\n\n" + acting_directions_feedback + "\n\n" + feedback + "\n\n" + goal_alignment_result
 
-# def provide_feedback(conversation_history, acting_directions_issue, acting_directions_situation, acting_directions_goal):
-#     """
-#     Provides feedback based on the crucial conversation rules and the conversation history.
+def provide_feedback(conversation_history, acting_directions_issue, acting_directions_situation, acting_directions_goal):
+    # Extract user messages from the conversation history
+    user_messages = [message["content"] for message in conversation_history if message["role"] == "user"]
 
-#     Args:
-#         conversation_history (list): List of conversation messages.
-#         acting_directions_issue (str): Acting directions related to the issue.
-#         acting_directions_situation (str): Acting directions related to the situation.
-#         acting_directions_goal (str): Acting directions related to the goal.
+    # Example: Check if any user message doesn't align with crucial conversation rules
+    noncompliant_messages = []
 
-#     Returns:
-#         str: Feedback based on crucial conversation rules.
-#     """
-#     # Extract user messages from the conversation history
-#     user_messages = [message["content"] for message in conversation_history if message["role"] == "user"]
+    for message in user_messages:
+        if not check_alignment_with_rules(message):
+            noncompliant_messages.append(message)
 
-#     # Example: Check if any user message doesn't align with crucial conversation rules
-#     noncompliant_messages = []
+    feedback = ""
 
-#     for message in user_messages:
-#         if not check_alignment_with_rules(message):
-#             noncompliant_messages.append(message)
+    if len(noncompliant_messages) > 0:
+        feedback += "Based on crucial conversation rules, the following messages could be improved:\n\n"
+        for message in noncompliant_messages:
+            feedback += f"- \"{message}\"\n"
 
-#     feedback = ""
+    # Additional feedback based on the acting directions and rules
+    # ...
 
-#     if len(noncompliant_messages) > 0:
-#         feedback += "Based on crucial conversation rules, the following messages could be improved:\n\n"
-#         for message in noncompliant_messages:
-#             feedback += f"- \"{message}\"\n"
-
-#     # Additional feedback based on the acting directions and rules
-#     # ...
-
-#     return feedback
+    return feedback
 
 
 def check_alignment_with_rules(message):
@@ -239,16 +221,6 @@ def check_alignment_with_rules(message):
     return {'aligns_with_rules': aligns_with_rules, 'suggestion': suggestion}
 
 def check_goal_alignment(goal, conversation_history):
-    """
-    Checks if the user's goal aligns with the results of the conversation.
-
-    Args:
-        goal (str): The user's goal.
-        conversation_history (list): List of conversation messages.
-
-    Returns:
-        str: Feedback on how well the user's goal was achieved and what could be improved.
-    """
     # Construct the conversation input for the GPT-3.5-turbo model
     conversation = []
     for message in conversation_history:
@@ -275,20 +247,7 @@ def check_goal_alignment(goal, conversation_history):
     else:
         return f"Your goal was not fully achieved in the conversation. Here's a suggestion for improvement: {assistant_response}"
 
-def check_alignment_with_rules(user_input):
-    aligns_with_rules = True
-    suggestion = ""
 
-    # Check for inconsistencies and misalignment in user input
-    if "called me to his office and told me I am about to be fired" in user_input:
-        if "wants to avoid having to fire me" in user_input:
-            aligns_with_rules = False
-            suggestion = "The situation description and the target's traits seem to be inconsistent. Please ensure that the simulation is aligned with the provided description."
-    
-    return {
-        "aligns_with_rules": aligns_with_rules,
-        "suggestion": suggestion
-    }
 def get_assistant_response(user_input, acting_directions_issue, acting_directions_target):
     # Modify assistant's response based on the acting_directions_issue and acting_directions_target
     if "Hello" in user_input:
@@ -319,8 +278,8 @@ def get_assistant_response(user_input, acting_directions_issue, acting_direction
         return response['choices'][0]['message']['content']
 
 def start_simulation():
-    acting_directions_issue = user_context['user_traits']
-    acting_directions_target = user_context['target_traits']
+    acting_directions_issue = user_context['target_traits']  # Change to conversation partner's traits
+    acting_directions_target = user_context['user_traits']  # Change to user's traits
     acting_directions_situation = user_context['situation']
     acting_directions_goal = user_context['goal']
     acting_directions = f"{acting_directions_issue}\n{acting_directions_target}\n{acting_directions_situation}\n{acting_directions_goal}"
@@ -367,6 +326,7 @@ def show_results():
     suggestions_and_feedback = generate_suggestions(user_context['conversation_history'], acting_directions, user_context['suggestions'])
     return render_template("results.html", suggestions_and_feedback=suggestions_and_feedback, acting_directions=acting_directions)
 
+
 def generate_suggestions(conversation_history, acting_directions, suggestions):
     acting_directions_issue = acting_directions.split("\n")[0]
     acting_directions_target = acting_directions.split("\n")[1]
@@ -393,7 +353,6 @@ def generate_suggestions(conversation_history, acting_directions, suggestions):
     # Construct messages with system, user, and assistant roles
     messages = [
         {"role": "system", "content": "You are an AI mentor providing suggestions based on crucial conversation rules."},
-        {"role": "user", "content": "What are some suggestions for how I could improve?"}
     ] + conversation_history
 
     try:
@@ -419,8 +378,6 @@ def generate_suggestions(conversation_history, acting_directions, suggestions):
         return suggestions_from_model + "\n\n" + acting_directions_feedback + "\n\n" + feedback + suggestions_text + "\n\n" + goal_alignment_result
     else:
         return suggestions_from_model + "\n\n" + acting_directions_feedback + "\n\n" + feedback + "\n\n" + goal_alignment_result
-
-
 
 if __name__ == "__main__":
     application.run(port=8000)
