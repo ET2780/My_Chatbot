@@ -69,30 +69,26 @@ def get_bot_response():
 
     elif states[current_state] == "simulation":
         # Continue the simulation
-        # Add the user's input to the conversation history
         user_context['conversation_history'].append({
-            "role": "user",
-            "content": userText
+         "role": "user",
+         "content": userText
         })
 
-        # Check alignment with rules and store suggestions
-        alignment_check = check_alignment_with_rules(userText)
-        if not alignment_check['aligns_with_rules'] and alignment_check['suggestion']:
-            user_context['suggestions'].append(alignment_check['suggestion'])
+        acting_directions = f"{user_context['target_traits']}\n{user_context['user_traits']}"
+        acting_directions_messages = [
+            {"role": "system", "content": acting_directions}
+            ]
 
-        # Create the messages array for the API call
-        messages = [
-            {"role": "system", "content": "You are an AI assistant."},
-            {"role": "user", "content": userText},
-        ] + user_context['conversation_history']  # Include the conversation history
+            # Create the messages array for the API call
+        messages = acting_directions_messages + user_context['conversation_history']  # Include the acting directions and conversation history
 
         try:
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo",
                 messages=messages,
                 max_tokens=100,
                 temperature=0.7,
-            )
+                )
         except RateLimitError:
             return "I'm sorry, but I'm currently overloaded with requests. Please try again later or reload the bot."
 
@@ -101,7 +97,7 @@ def get_bot_response():
 
         # Add the assistant's message to the conversation history
         user_context['conversation_history'].append({
-            "role": "assistant",
+            "role": user_context['conversation_with'],  # Use the role specified in "target_traits"
             "content": assistant_message
         })
 
@@ -284,14 +280,12 @@ def start_simulation():
     acting_directions_goal = user_context['goal']
     acting_directions = f"{acting_directions_issue}\n{acting_directions_target}\n{acting_directions_situation}\n{acting_directions_goal}"
 
-    # Create the system message
-    system_message = {
-        "role": "system",
-        "content": f"You are a highly trained actor. You are playing the role of {user_context['conversation_with']}. Your objective is not to solve problems or give advice, but to embody the following traits and behaviors: {acting_directions} while taking into consideration the situation the user described. Interact with the user in a way that reflects these traits and behaviors. Remember, you are not providing personal advice or solutions. Act as a person with these {user_context['target_traits']}, do not end the conversation, only the user can end it."
-    }
+    acting_directions_messages = [
+        {"role": "system", "content": acting_directions}
+    ]
 
     # Create the messages array for the API call
-    messages = [system_message]
+    messages = acting_directions_messages
 
     try:
         response = openai.ChatCompletion.create(
@@ -306,10 +300,9 @@ def start_simulation():
     # Extract the assistant's message from the response
     assistant_message = response['choices'][0]['message']['content']
 
-    # Add the system and assistant's message to the conversation history
-    user_context['conversation_history'].append(system_message)
+    # Add the assistant's message to the conversation history
     user_context['conversation_history'].append({
-        "role": "assistant",
+        "role": user_context['conversation_with'],  # Use the role specified in "target_traits"
         "content": assistant_message
     })
 
