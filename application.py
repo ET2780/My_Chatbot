@@ -16,7 +16,7 @@ user_context = {
 }
 # application.add_url_rule('/favicon-32x32.png', redirect_to=url_for('static', filename='Assets/favicon-32x32.png'))
 states = ["intro",  "name", "conversation_with", "user_traits", "target_traits", "situation", "goal", "simulation", "Results"]
-
+#fuck this
 current_state = 0
 
 def next_state():
